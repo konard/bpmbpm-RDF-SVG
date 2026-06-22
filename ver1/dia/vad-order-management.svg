@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VAD-диаграмма: Управление заказами с RDF-метаданными -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:vad="http://example.org/vad#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     width="900" height="480"
+     id="diagram-order-management"
+     viewBox="0 0 900 480">
+
+  <!-- =====================================================
+       RDF-блок уровня документа (всей диаграммы)
+       ===================================================== -->
+  <metadata id="doc-metadata">
+    <rdf:RDF>
+      <rdf:Description rdf:about="#diagram-order-management">
+        <rdf:type rdf:resource="http://example.org/vad#Diagram"/>
+        <dc:title xml:lang="ru">VAD: Управление заказами</dc:title>
+        <dc:creator>Иванов И.И.</dc:creator>
+        <dc:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2024-01-15</dc:date>
+        <dc:description xml:lang="ru">Диаграмма цепочки добавленной стоимости процесса управления заказами клиентов</dc:description>
+        <vad:version>1.2</vad:version>
+        <vad:organization>ООО Пример</vad:organization>
+        <vad:status>Утверждён</vad:status>
+        <dc:language>ru</dc:language>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <!-- Фон диаграммы -->
+  <rect width="900" height="480" fill="#F8F9FA" rx="8"/>
+
+  <!-- Заголовок диаграммы -->
+  <text x="450" y="35" text-anchor="middle" font-size="18" font-weight="bold" fill="#2C3E50" font-family="Arial, sans-serif">VAD: Управление заказами</text>
+  <line x1="50" y1="50" x2="850" y2="50" stroke="#BDC3C7" stroke-width="1"/>
+
+  <!-- Метки строк (дорожки) -->
+  <text x="30" y="125" text-anchor="middle" font-size="11" fill="#7F8C8D" font-family="Arial, sans-serif" transform="rotate(-90,30,125)">Исполнитель</text>
+  <text x="30" y="230" text-anchor="middle" font-size="11" fill="#7F8C8D" font-family="Arial, sans-serif" transform="rotate(-90,30,230)">Документы</text>
+  <text x="30" y="340" text-anchor="middle" font-size="11" fill="#7F8C8D" font-family="Arial, sans-serif" transform="rotate(-90,30,340)">ИТ-система</text>
+
+  <!-- Горизонтальные разделители дорожек -->
+  <line x1="50" y1="160" x2="850" y2="160" stroke="#ECF0F1" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="50" y1="270" x2="850" y2="270" stroke="#ECF0F1" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="50" y1="380" x2="850" y2="380" stroke="#ECF0F1" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- =====================================================
+       ПРОЦЕСС 1: Приём заказа
+       ===================================================== -->
+  <g id="process-receive-order"
+     class="vad-element vad-process"
+     data-vad-type="Process"
+     data-vad-title="Приём заказа">
+    <!-- RDF-метаданные элемента -->
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#process-receive-order">
+          <rdf:type rdf:resource="http://example.org/vad#Process"/>
+          <dc:title xml:lang="ru">Приём заказа</dc:title>
+          <dc:description xml:lang="ru">Регистрация входящего запроса клиента и создание заказа в системе</dc:description>
+          <vad:performer rdf:resource="#role-sales-manager"/>
+          <vad:input rdf:resource="#doc-customer-request"/>
+          <vad:output rdf:resource="#doc-order"/>
+          <vad:usedSystem rdf:resource="#system-crm"/>
+          <vad:duration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">30</vad:duration>
+          <vad:durationUnit>мин</vad:durationUnit>
+          <vad:cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">500</vad:cost>
+          <vad:costCurrency>RUB</vad:costCurrency>
+          <vad:processType>Основной</vad:processType>
+          <vad:maturityLevel rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</vad:maturityLevel>
+          <vad:isAutomated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</vad:isAutomated>
+          <vad:risk>Неполные данные от клиента</vad:risk>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <!-- Визуальное представление: прямоугольник процесса -->
+    <rect x="80" y="70" width="140" height="70" fill="#4A90D9" rx="6" stroke="#2874A6" stroke-width="1.5"/>
+    <text x="150" y="98" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">Приём</text>
+    <text x="150" y="115" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">заказа</text>
+    <text x="150" y="132" text-anchor="middle" font-size="10" fill="#D6EAF8" font-family="Arial, sans-serif">30 мин</text>
+  </g>
+
+  <!-- =====================================================
+       ПРОЦЕСС 2: Выставление счёта
+       ===================================================== -->
+  <g id="process-issue-invoice"
+     class="vad-element vad-process"
+     data-vad-type="Process"
+     data-vad-title="Выставление счёта">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#process-issue-invoice">
+          <rdf:type rdf:resource="http://example.org/vad#Process"/>
+          <dc:title xml:lang="ru">Выставление счёта</dc:title>
+          <dc:description xml:lang="ru">Формирование и отправка счёта на оплату клиенту</dc:description>
+          <vad:performer rdf:resource="#role-accountant"/>
+          <vad:input rdf:resource="#doc-order"/>
+          <vad:output rdf:resource="#doc-invoice"/>
+          <vad:usedSystem rdf:resource="#system-erp"/>
+          <vad:duration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">15</vad:duration>
+          <vad:durationUnit>мин</vad:durationUnit>
+          <vad:processType>Основной</vad:processType>
+          <vad:isAutomated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</vad:isAutomated>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="340" y="70" width="140" height="70" fill="#4A90D9" rx="6" stroke="#2874A6" stroke-width="1.5"/>
+    <text x="410" y="98" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">Выставление</text>
+    <text x="410" y="115" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">счёта</text>
+    <text x="410" y="132" text-anchor="middle" font-size="10" fill="#D6EAF8" font-family="Arial, sans-serif">15 мин</text>
+  </g>
+
+  <!-- =====================================================
+       ПРОЦЕСС 3: Отгрузка товара
+       ===================================================== -->
+  <g id="process-ship-goods"
+     class="vad-element vad-process"
+     data-vad-type="Process"
+     data-vad-title="Отгрузка товара">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#process-ship-goods">
+          <rdf:type rdf:resource="http://example.org/vad#Process"/>
+          <dc:title xml:lang="ru">Отгрузка товара</dc:title>
+          <dc:description xml:lang="ru">Подготовка и отгрузка товара клиенту со склада</dc:description>
+          <vad:performer rdf:resource="#role-warehouse-worker"/>
+          <vad:input rdf:resource="#doc-order"/>
+          <vad:output rdf:resource="#doc-waybill"/>
+          <vad:usedSystem rdf:resource="#system-erp"/>
+          <vad:duration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">120</vad:duration>
+          <vad:durationUnit>мин</vad:durationUnit>
+          <vad:processType>Основной</vad:processType>
+          <vad:isAutomated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</vad:isAutomated>
+          <vad:risk>Ошибка при комплектации заказа</vad:risk>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="600" y="70" width="140" height="70" fill="#4A90D9" rx="6" stroke="#2874A6" stroke-width="1.5"/>
+    <text x="670" y="98" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">Отгрузка</text>
+    <text x="670" y="115" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">товара</text>
+    <text x="670" y="132" text-anchor="middle" font-size="10" fill="#D6EAF8" font-family="Arial, sans-serif">120 мин</text>
+  </g>
+
+  <!-- Стрелки между процессами -->
+  <line x1="220" y1="105" x2="340" y2="105" stroke="#7F8C8D" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="480" y1="105" x2="600" y2="105" stroke="#7F8C8D" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- =====================================================
+       РОЛЬ 1: Менеджер по продажам
+       ===================================================== -->
+  <g id="role-sales-manager"
+     class="vad-element vad-role"
+     data-vad-type="Role"
+     data-vad-title="Менеджер по продажам">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#role-sales-manager">
+          <rdf:type rdf:resource="http://example.org/vad#Role"/>
+          <dc:title xml:lang="ru">Менеджер по продажам</dc:title>
+          <vad:department>Отдел продаж</vad:department>
+          <vad:roleType>Должность</vad:roleType>
+          <vad:responsibilityLevel>R</vad:responsibilityLevel>
+          <vad:headcount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</vad:headcount>
+          <vad:competency>Навыки продаж, знание CRM</vad:competency>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <!-- Иконка роли (человек) -->
+    <circle cx="150" cy="185" r="14" fill="#27AE60" stroke="#1E8449" stroke-width="1.5"/>
+    <text x="150" y="189" text-anchor="middle" font-size="14" fill="white" font-family="Arial, sans-serif">👤</text>
+    <text x="150" y="210" text-anchor="middle" font-size="10" fill="#2C3E50" font-family="Arial, sans-serif">Менеджер</text>
+    <text x="150" y="222" text-anchor="middle" font-size="10" fill="#2C3E50" font-family="Arial, sans-serif">по продажам</text>
+    <!-- Связь роли с процессом -->
+    <line x1="150" y1="170" x2="150" y2="140" stroke="#27AE60" stroke-width="1" stroke-dasharray="3,3"/>
+  </g>
+
+  <!-- =====================================================
+       РОЛЬ 2: Бухгалтер
+       ===================================================== -->
+  <g id="role-accountant"
+     class="vad-element vad-role"
+     data-vad-type="Role"
+     data-vad-title="Бухгалтер">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#role-accountant">
+          <rdf:type rdf:resource="http://example.org/vad#Role"/>
+          <dc:title xml:lang="ru">Бухгалтер</dc:title>
+          <vad:department>Бухгалтерия</vad:department>
+          <vad:roleType>Должность</vad:roleType>
+          <vad:responsibilityLevel>R</vad:responsibilityLevel>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <circle cx="410" cy="185" r="14" fill="#27AE60" stroke="#1E8449" stroke-width="1.5"/>
+    <text x="410" y="189" text-anchor="middle" font-size="14" fill="white" font-family="Arial, sans-serif">👤</text>
+    <text x="410" y="210" text-anchor="middle" font-size="10" fill="#2C3E50" font-family="Arial, sans-serif">Бухгалтер</text>
+    <line x1="410" y1="170" x2="410" y2="140" stroke="#27AE60" stroke-width="1" stroke-dasharray="3,3"/>
+  </g>
+
+  <!-- =====================================================
+       РОЛЬ 3: Кладовщик
+       ===================================================== -->
+  <g id="role-warehouse-worker"
+     class="vad-element vad-role"
+     data-vad-type="Role"
+     data-vad-title="Кладовщик">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#role-warehouse-worker">
+          <rdf:type rdf:resource="http://example.org/vad#Role"/>
+          <dc:title xml:lang="ru">Кладовщик</dc:title>
+          <vad:department>Склад</vad:department>
+          <vad:roleType>Должность</vad:roleType>
+          <vad:responsibilityLevel>R</vad:responsibilityLevel>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <circle cx="670" cy="185" r="14" fill="#27AE60" stroke="#1E8449" stroke-width="1.5"/>
+    <text x="670" y="189" text-anchor="middle" font-size="14" fill="white" font-family="Arial, sans-serif">👤</text>
+    <text x="670" y="210" text-anchor="middle" font-size="10" fill="#2C3E50" font-family="Arial, sans-serif">Кладовщик</text>
+    <line x1="670" y1="170" x2="670" y2="140" stroke="#27AE60" stroke-width="1" stroke-dasharray="3,3"/>
+  </g>
+
+  <!-- =====================================================
+       ДОКУМЕНТЫ
+       ===================================================== -->
+  <!-- Документ: Запрос клиента -->
+  <g id="doc-customer-request"
+     class="vad-element vad-document"
+     data-vad-type="Document"
+     data-vad-title="Запрос клиента">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#doc-customer-request">
+          <rdf:type rdf:resource="http://example.org/vad#Document"/>
+          <dc:title xml:lang="ru">Запрос клиента</dc:title>
+          <vad:documentType>Форма</vad:documentType>
+          <dc:format>PDF/Email</dc:format>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="60" y="285" width="100" height="55" fill="white" rx="3" stroke="#95A5A6" stroke-width="1.5"/>
+    <rect x="60" y="285" width="100" height="12" fill="#ECF0F1" rx="3"/>
+    <line x1="70" y1="307" x2="150" y2="307" stroke="#BDC3C7" stroke-width="1"/>
+    <line x1="70" y1="318" x2="150" y2="318" stroke="#BDC3C7" stroke-width="1"/>
+    <text x="110" y="353" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Запрос</text>
+    <text x="110" y="363" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">клиента</text>
+    <line x1="110" y1="285" x2="150" y2="140" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+  </g>
+
+  <!-- Документ: Заказ -->
+  <g id="doc-order"
+     class="vad-element vad-document"
+     data-vad-type="Document"
+     data-vad-title="Заказ">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#doc-order">
+          <rdf:type rdf:resource="http://example.org/vad#Document"/>
+          <dc:title xml:lang="ru">Заказ</dc:title>
+          <vad:documentType>Документ</vad:documentType>
+          <dc:format>1С:Документ</dc:format>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="310" y="285" width="100" height="55" fill="white" rx="3" stroke="#95A5A6" stroke-width="1.5"/>
+    <rect x="310" y="285" width="100" height="12" fill="#ECF0F1" rx="3"/>
+    <line x1="320" y1="307" x2="400" y2="307" stroke="#BDC3C7" stroke-width="1"/>
+    <line x1="320" y1="318" x2="400" y2="318" stroke="#BDC3C7" stroke-width="1"/>
+    <text x="360" y="353" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Заказ</text>
+    <line x1="360" y1="285" x2="410" y2="140" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+  </g>
+
+  <!-- Документ: Счёт -->
+  <g id="doc-invoice"
+     class="vad-element vad-document"
+     data-vad-type="Document"
+     data-vad-title="Счёт на оплату">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#doc-invoice">
+          <rdf:type rdf:resource="http://example.org/vad#Document"/>
+          <dc:title xml:lang="ru">Счёт на оплату</dc:title>
+          <vad:documentType>Документ</vad:documentType>
+          <dc:format>PDF</dc:format>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="450" y="285" width="100" height="55" fill="white" rx="3" stroke="#95A5A6" stroke-width="1.5"/>
+    <rect x="450" y="285" width="100" height="12" fill="#ECF0F1" rx="3"/>
+    <line x1="460" y1="307" x2="540" y2="307" stroke="#BDC3C7" stroke-width="1"/>
+    <line x1="460" y1="318" x2="540" y2="318" stroke="#BDC3C7" stroke-width="1"/>
+    <text x="500" y="353" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Счёт</text>
+    <text x="500" y="363" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">на оплату</text>
+    <line x1="500" y1="285" x2="410" y2="140" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+  </g>
+
+  <!-- Документ: Товарная накладная -->
+  <g id="doc-waybill"
+     class="vad-element vad-document"
+     data-vad-type="Document"
+     data-vad-title="Товарная накладная">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#doc-waybill">
+          <rdf:type rdf:resource="http://example.org/vad#Document"/>
+          <dc:title xml:lang="ru">Товарная накладная</dc:title>
+          <vad:documentType>Первичный документ</vad:documentType>
+          <dc:format>ТОРГ-12</dc:format>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="710" y="285" width="100" height="55" fill="white" rx="3" stroke="#95A5A6" stroke-width="1.5"/>
+    <rect x="710" y="285" width="100" height="12" fill="#ECF0F1" rx="3"/>
+    <line x1="720" y1="307" x2="800" y2="307" stroke="#BDC3C7" stroke-width="1"/>
+    <line x1="720" y1="318" x2="800" y2="318" stroke="#BDC3C7" stroke-width="1"/>
+    <text x="760" y="353" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Товарная</text>
+    <text x="760" y="363" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">накладная</text>
+    <line x1="760" y1="285" x2="670" y2="140" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+  </g>
+
+  <!-- =====================================================
+       ИТ-СИСТЕМЫ
+       ===================================================== -->
+  <!-- ИТ-система: CRM -->
+  <g id="system-crm"
+     class="vad-element vad-system"
+     data-vad-type="ITSystem"
+     data-vad-title="CRM-система">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#system-crm">
+          <rdf:type rdf:resource="http://example.org/vad#ITSystem"/>
+          <dc:title xml:lang="ru">CRM-система</dc:title>
+          <vad:vendor>Битрикс24</vad:vendor>
+          <vad:version>24.0</vad:version>
+          <vad:systemType>CRM</vad:systemType>
+          <vad:systemStatus>Эксплуатация</vad:systemStatus>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="80" y="395" width="140" height="50" fill="#8E44AD" rx="6" stroke="#6C3483" stroke-width="1.5"/>
+    <text x="150" y="416" text-anchor="middle" font-size="11" font-weight="bold" fill="white" font-family="Arial, sans-serif">CRM-система</text>
+    <text x="150" y="432" text-anchor="middle" font-size="9" fill="#D7BDE2" font-family="Arial, sans-serif">Битрикс24 v24.0</text>
+    <line x1="150" y1="395" x2="150" y2="140" stroke="#8E44AD" stroke-width="1" stroke-dasharray="3,3"/>
+  </g>
+
+  <!-- ИТ-система: ERP -->
+  <g id="system-erp"
+     class="vad-element vad-system"
+     data-vad-type="ITSystem"
+     data-vad-title="1С:Управление торговлей">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#system-erp">
+          <rdf:type rdf:resource="http://example.org/vad#ITSystem"/>
+          <dc:title xml:lang="ru">1С:Управление торговлей</dc:title>
+          <vad:vendor>1С</vad:vendor>
+          <vad:version>11.5</vad:version>
+          <vad:systemType>ERP</vad:systemType>
+          <vad:systemStatus>Эксплуатация</vad:systemStatus>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="470" y="395" width="200" height="50" fill="#8E44AD" rx="6" stroke="#6C3483" stroke-width="1.5"/>
+    <text x="570" y="416" text-anchor="middle" font-size="11" font-weight="bold" fill="white" font-family="Arial, sans-serif">1С:Управление торговлей</text>
+    <text x="570" y="432" text-anchor="middle" font-size="9" fill="#D7BDE2" font-family="Arial, sans-serif">1С v11.5</text>
+    <line x1="410" y1="395" x2="410" y2="140" stroke="#8E44AD" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="670" y1="395" x2="670" y2="140" stroke="#8E44AD" stroke-width="1" stroke-dasharray="3,3"/>
+  </g>
+
+  <!-- Маркер стрелки -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7F8C8D"/>
+    </marker>
+  </defs>
+
+  <!-- Легенда -->
+  <g transform="translate(650, 430)">
+    <rect x="0" y="0" width="220" height="40" fill="white" rx="4" stroke="#BDC3C7" stroke-width="1"/>
+    <rect x="8" y="10" width="14" height="10" fill="#4A90D9" rx="2"/>
+    <text x="28" y="19" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Процесс</text>
+    <rect x="78" y="10" width="14" height="10" fill="#27AE60" rx="7"/>
+    <text x="98" y="19" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Роль</text>
+    <rect x="8" y="26" width="14" height="10" fill="white" stroke="#95A5A6" stroke-width="1" rx="2"/>
+    <text x="28" y="35" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Документ</text>
+    <rect x="78" y="26" width="14" height="10" fill="#8E44AD" rx="2"/>
+    <text x="98" y="35" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">ИТ-система</text>
+  </g>
+
+  <!-- Подсказка для пользователя -->
+  <text x="450" y="465" text-anchor="middle" font-size="9" fill="#95A5A6" font-family="Arial, sans-serif">
+    Правая кнопка мыши на элементе → просмотр и редактирование свойств SVG и RDF
+  </text>
+
+</svg>

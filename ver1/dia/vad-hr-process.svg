@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VAD-диаграмма: Управление персоналом — пример с TriG -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:vad="http://example.org/vad#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     width="900" height="500"
+     id="diagram-hr-process"
+     viewBox="0 0 900 500">
+
+  <!-- =====================================================
+       RDF-блок уровня документа (RDF/XML)
+       ===================================================== -->
+  <metadata id="doc-metadata">
+    <rdf:RDF>
+      <rdf:Description rdf:about="#diagram-hr-process">
+        <rdf:type rdf:resource="http://example.org/vad#Diagram"/>
+        <dc:title xml:lang="ru">VAD: Управление персоналом</dc:title>
+        <dc:creator>Петрова А.В.</dc:creator>
+        <dc:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2024-03-10</dc:date>
+        <dc:description xml:lang="ru">Диаграмма процессов управления персоналом организации</dc:description>
+        <vad:version>2.0</vad:version>
+        <vad:organization>ООО Пример</vad:organization>
+        <vad:status>Черновик</vad:status>
+        <dc:language>ru</dc:language>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <!-- =====================================================
+       TriG-блок с именованными графами
+       data-format="trig" — маркер для JS-парсера
+       ===================================================== -->
+  <metadata id="trig-data" data-format="trig">
+    <![CDATA[
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix dc:   <http://purl.org/dc/elements/1.1/> .
+@prefix vad:  <http://example.org/vad#> .
+
+# ---- Именованный граф: Диаграмма ----
+<http://example.org/graph/hr-diagram> {
+  <http://example.org/diagram/hr-process> a vad:Diagram ;
+      dc:title "VAD: Управление персоналом"@ru ;
+      dc:creator "Петрова А.В." ;
+      dc:date "2024-03-10"^^xsd:date ;
+      vad:version "2.0" ;
+      vad:status "Черновик" .
+}
+
+# ---- Именованный граф: Процесс подбора персонала ----
+<http://example.org/graph/process-recruit> {
+  <http://example.org/diagram/hr-process#process-recruit> a vad:Process ;
+      dc:title "Подбор персонала"@ru ;
+      dc:description "Поиск и отбор кандидатов на вакантные должности"@ru ;
+      vad:performer <http://example.org/diagram/hr-process#role-hr-manager> ;
+      vad:input <http://example.org/diagram/hr-process#doc-vacancy> ;
+      vad:output <http://example.org/diagram/hr-process#doc-candidate-list> ;
+      vad:duration "10080"^^xsd:integer ;
+      vad:durationUnit "мин" ;
+      vad:processType "Основной" ;
+      vad:risk "Нехватка квалифицированных кандидатов" ;
+      vad:maturityLevel "2"^^xsd:integer .
+}
+
+# ---- Именованный граф: Процесс адаптации ----
+<http://example.org/graph/process-onboard> {
+  <http://example.org/diagram/hr-process#process-onboard> a vad:Process ;
+      dc:title "Адаптация сотрудника"@ru ;
+      dc:description "Введение нового сотрудника в должность"@ru ;
+      vad:performer <http://example.org/diagram/hr-process#role-hr-manager> ;
+      vad:input <http://example.org/diagram/hr-process#doc-candidate-list> ;
+      vad:output <http://example.org/diagram/hr-process#doc-onboard-plan> ;
+      vad:duration "20160"^^xsd:integer ;
+      vad:durationUnit "мин" ;
+      vad:processType "Вспомогательный" .
+}
+
+# ---- Именованный граф: Роль HR-менеджера ----
+<http://example.org/graph/role-hr-manager> {
+  <http://example.org/diagram/hr-process#role-hr-manager> a vad:Role ;
+      dc:title "HR-менеджер"@ru ;
+      vad:department "Отдел кадров" ;
+      vad:roleType "Должность" ;
+      vad:responsibilityLevel "R" ;
+      vad:headcount "3"^^xsd:integer ;
+      vad:competency "Управление персоналом, трудовое законодательство" .
+}
+
+# ---- Именованный граф: Роль руководителя ----
+<http://example.org/graph/role-manager> {
+  <http://example.org/diagram/hr-process#role-manager> a vad:Role ;
+      dc:title "Руководитель подразделения"@ru ;
+      vad:department "Любое подразделение" ;
+      vad:roleType "Должность" ;
+      vad:responsibilityLevel "A" .
+}
+    ]]>
+  </metadata>
+
+  <!-- Фон -->
+  <rect width="900" height="500" fill="#F0F4F8" rx="8"/>
+
+  <!-- Заголовок -->
+  <text x="450" y="35" text-anchor="middle" font-size="18" font-weight="bold" fill="#2C3E50" font-family="Arial, sans-serif">VAD: Управление персоналом</text>
+  <text x="450" y="52" text-anchor="middle" font-size="10" fill="#7F8C8D" font-family="Arial, sans-serif">Содержит TriG-блок с именованными RDF-графами</text>
+  <line x1="50" y1="60" x2="850" y2="60" stroke="#BDC3C7" stroke-width="1"/>
+
+  <!-- Разделители дорожек -->
+  <line x1="50" y1="175" x2="850" y2="175" stroke="#ECF0F1" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="50" y1="285" x2="850" y2="285" stroke="#ECF0F1" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="50" y1="390" x2="850" y2="390" stroke="#ECF0F1" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- Метки строк -->
+  <text x="30" y="130" text-anchor="middle" font-size="10" fill="#7F8C8D" font-family="Arial, sans-serif" transform="rotate(-90,30,130)">Процессы</text>
+  <text x="30" y="235" text-anchor="middle" font-size="10" fill="#7F8C8D" font-family="Arial, sans-serif" transform="rotate(-90,30,235)">Исполнители</text>
+  <text x="30" y="340" text-anchor="middle" font-size="10" fill="#7F8C8D" font-family="Arial, sans-serif" transform="rotate(-90,30,340)">Документы</text>
+
+  <!-- =====================================================
+       ПРОЦЕСС 1: Подбор персонала
+       ===================================================== -->
+  <g id="process-recruit"
+     class="vad-element vad-process"
+     data-vad-type="Process"
+     data-vad-title="Подбор персонала"
+     data-trig-graph="http://example.org/graph/process-recruit">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#process-recruit">
+          <rdf:type rdf:resource="http://example.org/vad#Process"/>
+          <dc:title xml:lang="ru">Подбор персонала</dc:title>
+          <dc:description xml:lang="ru">Поиск и отбор кандидатов на вакантные должности</dc:description>
+          <vad:performer rdf:resource="#role-hr-manager"/>
+          <vad:input rdf:resource="#doc-vacancy"/>
+          <vad:output rdf:resource="#doc-candidate-list"/>
+          <vad:duration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10080</vad:duration>
+          <vad:durationUnit>мин</vad:durationUnit>
+          <vad:processType>Основной</vad:processType>
+          <vad:risk>Нехватка квалифицированных кандидатов</vad:risk>
+          <vad:maturityLevel rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</vad:maturityLevel>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="100" y="80" width="160" height="75" fill="#E67E22" rx="6" stroke="#CA6F1E" stroke-width="1.5"/>
+    <text x="180" y="108" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">Подбор</text>
+    <text x="180" y="125" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">персонала</text>
+    <text x="180" y="143" text-anchor="middle" font-size="10" fill="#FDEBD0" font-family="Arial, sans-serif">~7 дней</text>
+  </g>
+
+  <!-- =====================================================
+       ПРОЦЕСС 2: Оформление на работу
+       ===================================================== -->
+  <g id="process-hire"
+     class="vad-element vad-process"
+     data-vad-type="Process"
+     data-vad-title="Оформление на работу">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#process-hire">
+          <rdf:type rdf:resource="http://example.org/vad#Process"/>
+          <dc:title xml:lang="ru">Оформление на работу</dc:title>
+          <dc:description xml:lang="ru">Подготовка и подписание трудового договора, оформление документов</dc:description>
+          <vad:performer rdf:resource="#role-hr-manager"/>
+          <vad:input rdf:resource="#doc-candidate-list"/>
+          <vad:output rdf:resource="#doc-employment-contract"/>
+          <vad:duration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">480</vad:duration>
+          <vad:durationUnit>мин</vad:durationUnit>
+          <vad:processType>Основной</vad:processType>
+          <vad:regulation>ТК РФ, ст. 67</vad:regulation>
+          <vad:isAutomated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</vad:isAutomated>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="360" y="80" width="160" height="75" fill="#E67E22" rx="6" stroke="#CA6F1E" stroke-width="1.5"/>
+    <text x="440" y="108" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">Оформление</text>
+    <text x="440" y="125" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">на работу</text>
+    <text x="440" y="143" text-anchor="middle" font-size="10" fill="#FDEBD0" font-family="Arial, sans-serif">1 день</text>
+  </g>
+
+  <!-- =====================================================
+       ПРОЦЕСС 3: Адаптация сотрудника
+       ===================================================== -->
+  <g id="process-onboard"
+     class="vad-element vad-process"
+     data-vad-type="Process"
+     data-vad-title="Адаптация сотрудника"
+     data-trig-graph="http://example.org/graph/process-onboard">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#process-onboard">
+          <rdf:type rdf:resource="http://example.org/vad#Process"/>
+          <dc:title xml:lang="ru">Адаптация сотрудника</dc:title>
+          <dc:description xml:lang="ru">Введение нового сотрудника в должность и помощь в освоении</dc:description>
+          <vad:performer rdf:resource="#role-manager"/>
+          <vad:input rdf:resource="#doc-employment-contract"/>
+          <vad:output rdf:resource="#doc-onboard-plan"/>
+          <vad:duration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">20160</vad:duration>
+          <vad:durationUnit>мин</vad:durationUnit>
+          <vad:processType>Вспомогательный</vad:processType>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="620" y="80" width="160" height="75" fill="#E67E22" rx="6" stroke="#CA6F1E" stroke-width="1.5"/>
+    <text x="700" y="108" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">Адаптация</text>
+    <text x="700" y="125" text-anchor="middle" font-size="12" font-weight="bold" fill="white" font-family="Arial, sans-serif">сотрудника</text>
+    <text x="700" y="143" text-anchor="middle" font-size="10" fill="#FDEBD0" font-family="Arial, sans-serif">14 дней</text>
+  </g>
+
+  <!-- Стрелки -->
+  <line x1="260" y1="117" x2="360" y2="117" stroke="#7F8C8D" stroke-width="2" marker-end="url(#arrowhead2)"/>
+  <line x1="520" y1="117" x2="620" y2="117" stroke="#7F8C8D" stroke-width="2" marker-end="url(#arrowhead2)"/>
+
+  <!-- =====================================================
+       РОЛИ
+       ===================================================== -->
+  <g id="role-hr-manager"
+     class="vad-element vad-role"
+     data-vad-type="Role"
+     data-vad-title="HR-менеджер"
+     data-trig-graph="http://example.org/graph/role-hr-manager">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#role-hr-manager">
+          <rdf:type rdf:resource="http://example.org/vad#Role"/>
+          <dc:title xml:lang="ru">HR-менеджер</dc:title>
+          <vad:department>Отдел кадров</vad:department>
+          <vad:roleType>Должность</vad:roleType>
+          <vad:responsibilityLevel>R</vad:responsibilityLevel>
+          <vad:headcount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</vad:headcount>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <circle cx="310" cy="215" r="16" fill="#16A085" stroke="#117A65" stroke-width="1.5"/>
+    <text x="310" y="220" text-anchor="middle" font-size="14" fill="white" font-family="Arial, sans-serif">👤</text>
+    <text x="310" y="242" text-anchor="middle" font-size="10" fill="#2C3E50" font-family="Arial, sans-serif">HR-менеджер</text>
+    <text x="310" y="254" text-anchor="middle" font-size="9" fill="#7F8C8D" font-family="Arial, sans-serif">Отдел кадров</text>
+    <line x1="180" y1="198" x2="300" y2="214" stroke="#16A085" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="440" y1="198" x2="315" y2="214" stroke="#16A085" stroke-width="1" stroke-dasharray="3,3"/>
+  </g>
+
+  <g id="role-manager"
+     class="vad-element vad-role"
+     data-vad-type="Role"
+     data-vad-title="Руководитель подразделения"
+     data-trig-graph="http://example.org/graph/role-manager">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#role-manager">
+          <rdf:type rdf:resource="http://example.org/vad#Role"/>
+          <dc:title xml:lang="ru">Руководитель подразделения</dc:title>
+          <vad:department>Любое подразделение</vad:department>
+          <vad:roleType>Должность</vad:roleType>
+          <vad:responsibilityLevel>A</vad:responsibilityLevel>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <circle cx="700" cy="215" r="16" fill="#16A085" stroke="#117A65" stroke-width="1.5"/>
+    <text x="700" y="220" text-anchor="middle" font-size="14" fill="white" font-family="Arial, sans-serif">👤</text>
+    <text x="700" y="242" text-anchor="middle" font-size="10" fill="#2C3E50" font-family="Arial, sans-serif">Руководитель</text>
+    <text x="700" y="254" text-anchor="middle" font-size="9" fill="#7F8C8D" font-family="Arial, sans-serif">подразделения</text>
+    <line x1="700" y1="198" x2="700" y2="155" stroke="#16A085" stroke-width="1" stroke-dasharray="3,3"/>
+  </g>
+
+  <!-- =====================================================
+       ДОКУМЕНТЫ
+       ===================================================== -->
+  <g id="doc-vacancy"
+     class="vad-element vad-document"
+     data-vad-type="Document"
+     data-vad-title="Заявка на вакансию">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#doc-vacancy">
+          <rdf:type rdf:resource="http://example.org/vad#Document"/>
+          <dc:title xml:lang="ru">Заявка на вакансию</dc:title>
+          <vad:documentType>Форма</vad:documentType>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="60" y="300" width="110" height="55" fill="white" rx="3" stroke="#95A5A6" stroke-width="1.5"/>
+    <rect x="60" y="300" width="110" height="12" fill="#FDEBD0" rx="3"/>
+    <text x="115" y="369" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Заявка</text>
+    <text x="115" y="379" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">на вакансию</text>
+    <line x1="115" y1="300" x2="155" y2="155" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+  </g>
+
+  <g id="doc-candidate-list"
+     class="vad-element vad-document"
+     data-vad-type="Document"
+     data-vad-title="Список кандидатов">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#doc-candidate-list">
+          <rdf:type rdf:resource="http://example.org/vad#Document"/>
+          <dc:title xml:lang="ru">Список кандидатов</dc:title>
+          <vad:documentType>Отчёт</vad:documentType>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="270" y="300" width="110" height="55" fill="white" rx="3" stroke="#95A5A6" stroke-width="1.5"/>
+    <rect x="270" y="300" width="110" height="12" fill="#FDEBD0" rx="3"/>
+    <text x="325" y="369" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Список</text>
+    <text x="325" y="379" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">кандидатов</text>
+    <line x1="325" y1="300" x2="210" y2="155" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+    <line x1="325" y1="300" x2="410" y2="155" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+  </g>
+
+  <g id="doc-employment-contract"
+     class="vad-element vad-document"
+     data-vad-type="Document"
+     data-vad-title="Трудовой договор">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#doc-employment-contract">
+          <rdf:type rdf:resource="http://example.org/vad#Document"/>
+          <dc:title xml:lang="ru">Трудовой договор</dc:title>
+          <vad:documentType>Договор</vad:documentType>
+          <dc:format>Бумажный/PDF</dc:format>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="530" y="300" width="120" height="55" fill="white" rx="3" stroke="#95A5A6" stroke-width="1.5"/>
+    <rect x="530" y="300" width="120" height="12" fill="#FDEBD0" rx="3"/>
+    <text x="590" y="369" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">Трудовой</text>
+    <text x="590" y="379" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">договор</text>
+    <line x1="590" y1="300" x2="470" y2="155" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+    <line x1="590" y1="300" x2="660" y2="155" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+  </g>
+
+  <g id="doc-onboard-plan"
+     class="vad-element vad-document"
+     data-vad-type="Document"
+     data-vad-title="План адаптации">
+    <metadata>
+      <rdf:RDF>
+        <rdf:Description rdf:about="#doc-onboard-plan">
+          <rdf:type rdf:resource="http://example.org/vad#Document"/>
+          <dc:title xml:lang="ru">План адаптации</dc:title>
+          <vad:documentType>План</vad:documentType>
+        </rdf:Description>
+      </rdf:RDF>
+    </metadata>
+    <rect x="730" y="300" width="110" height="55" fill="white" rx="3" stroke="#95A5A6" stroke-width="1.5"/>
+    <rect x="730" y="300" width="110" height="12" fill="#FDEBD0" rx="3"/>
+    <text x="785" y="369" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">План</text>
+    <text x="785" y="379" text-anchor="middle" font-size="9" fill="#2C3E50" font-family="Arial, sans-serif">адаптации</text>
+    <line x1="785" y1="300" x2="730" y2="155" stroke="#95A5A6" stroke-width="1" stroke-dasharray="2,2"/>
+  </g>
+
+  <!-- Маркер стрелки -->
+  <defs>
+    <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7F8C8D"/>
+    </marker>
+  </defs>
+
+  <!-- Легенда TriG -->
+  <rect x="55" y="410" width="790" height="70" fill="white" rx="6" stroke="#E67E22" stroke-width="1.5"/>
+  <text x="450" y="430" text-anchor="middle" font-size="11" font-weight="bold" fill="#E67E22" font-family="Arial, sans-serif">Файл содержит TriG-блок с именованными RDF-графами</text>
+  <text x="450" y="448" text-anchor="middle" font-size="10" fill="#7F8C8D" font-family="Arial, sans-serif">Каждый элемент диаграммы имеет свой именованный граф (атрибут data-trig-graph)</text>
+  <text x="450" y="466" text-anchor="middle" font-size="10" fill="#7F8C8D" font-family="Arial, sans-serif">TriG доступен через: &lt;metadata id="trig-data" data-format="trig"&gt; (CDATA-блок)</text>
+
+  <!-- Подсказка -->
+  <text x="450" y="493" text-anchor="middle" font-size="9" fill="#BDC3C7" font-family="Arial, sans-serif">
+    Правая кнопка мыши на элементе → просмотр и редактирование свойств SVG и RDF
+  </text>
+
+</svg>

@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SVG-RDF Viewer — Просмотр VAD-диаграмм с RDF-метаданными</title>
+  <style>
+    /* ---- Сброс и базовые стили ---- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      background: #1A1A2E;
+      color: #E0E0E0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ---- Шапка ---- */
+    #header {
+      background: #16213E;
+      border-bottom: 2px solid #0F3460;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    #header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #E94560;
+      flex: 1;
+    }
+
+    /* ---- Кнопки ---- */
+    .btn {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: #E94560;
+      color: white;
+    }
+    .btn-primary:hover { background: #C73652; }
+
+    .btn-secondary {
+      background: #0F3460;
+      color: #A0C4FF;
+    }
+    .btn-secondary:hover { background: #1A4A80; }
+
+    /* ---- Основной макет ---- */
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ---- Боковая панель: список файлов ---- */
+    #sidebar {
+      width: 220px;
+      background: #16213E;
+      border-right: 1px solid #0F3460;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    #sidebar-title {
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #8A9BB0;
+      border-bottom: 1px solid #0F3460;
+    }
+
+    #file-list {
+      list-style: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 0;
+    }
+
+    #file-list li {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      font-size: 12px;
+      color: #A0B0C0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.1s;
+    }
+    #file-list li:hover { background: #0F3460; color: #E0E0E0; }
+    #file-list li.active {
+      background: #0F3460;
+      border-left-color: #E94560;
+      color: white;
+    }
+
+    #file-list li .file-icon { font-size: 14px; }
+    #file-list li .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    #sidebar-empty {
+      padding: 20px 12px;
+      color: #5A6A7A;
+      font-size: 12px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* ---- Область просмотра SVG ---- */
+    #viewer-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #0A0A1A;
+    }
+
+    #viewer-toolbar {
+      background: #16213E;
+      border-bottom: 1px solid #0F3460;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    #diagram-title {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: #A0C4FF;
+    }
+
+    #zoom-display {
+      font-size: 11px;
+      color: #8A9BB0;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    #svg-container {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 20px;
+    }
+
+    #svg-wrapper {
+      cursor: default;
+      transform-origin: top left;
+      transition: transform 0.1s;
+    }
+
+    /* SVG-элементы — интерактивны */
+    #svg-wrapper .vad-element {
+      cursor: pointer;
+    }
+    #svg-wrapper .vad-element:hover > rect,
+    #svg-wrapper .vad-element:hover > circle {
+      filter: brightness(1.2);
+    }
+
+    #svg-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: #3A4A5A;
+    }
+    #svg-placeholder .icon { font-size: 64px; }
+    #svg-placeholder p { font-size: 14px; }
+
+    /* ---- Панель свойств ---- */
+    #properties-panel {
+      width: 320px;
+      background: #16213E;
+      border-left: 1px solid #0F3460;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: width 0.2s;
+    }
+    #properties-panel.hidden { width: 0; overflow: hidden; border: none; }
+
+    #props-header {
+      padding: 10px 12px;
+      background: #0F3460;
+      border-bottom: 1px solid #1A3A6A;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #props-header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+      color: #A0C4FF;
+    }
+    #props-close {
+      background: none;
+      border: none;
+      color: #8A9BB0;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+    }
+    #props-close:hover { color: #E94560; }
+
+    /* Вкладки */
+    #props-tabs {
+      display: flex;
+      border-bottom: 1px solid #0F3460;
+      flex-shrink: 0;
+    }
+    .props-tab {
+      padding: 8px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      color: #8A9BB0;
+      transition: all 0.15s;
+    }
+    .props-tab.active {
+      border-bottom-color: #E94560;
+      color: #E0E0E0;
+      background: #1A2A4A;
+    }
+    .props-tab:hover:not(.active) { background: #0F2040; color: #A0B0C0; }
+
+    #props-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    .props-section {
+      display: none;
+      padding: 12px;
+    }
+    .props-section.active { display: block; }
+
+    .prop-group-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #5A6A7A;
+      margin: 12px 0 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #0F3460;
+    }
+    .prop-group-title:first-child { margin-top: 0; }
+
+    .prop-row {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 8px;
+      padding: 6px 8px;
+      background: #0F1E36;
+      border-radius: 4px;
+      border-left: 2px solid #0F3460;
+    }
+    .prop-row:hover { background: #1A2E4A; border-left-color: #4A90D9; }
+
+    .prop-key {
+      font-size: 10px;
+      color: #5A8AC0;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .prop-value {
+      font-size: 12px;
+      color: #C0D0E0;
+      word-break: break-all;
+    }
+    .prop-value.uri { color: #4AC0FF; font-size: 11px; }
+    .prop-value.boolean-true { color: #50C878; }
+    .prop-value.boolean-false { color: #E94560; }
+    .prop-value.number { color: #FFD700; }
+
+    /* Редактор RDF */
+    #rdf-editor-section {
+      padding: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #rdf-editor-section.active { display: flex; }
+
+    .editor-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .editor-field label {
+      font-size: 11px;
+      color: #8A9BB0;
+      font-weight: 600;
+    }
+    .editor-field input,
+    .editor-field select,
+    .editor-field textarea {
+      background: #0F1E36;
+      border: 1px solid #1A3A6A;
+      border-radius: 4px;
+      color: #E0E0E0;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    .editor-field input:focus,
+    .editor-field select:focus,
+    .editor-field textarea:focus {
+      outline: none;
+      border-color: #E94560;
+    }
+    .editor-field textarea { min-height: 60px; }
+
+    .editor-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 11px;
+    }
+    .btn-success { background: #1A6A3A; color: #90EE90; }
+    .btn-success:hover { background: #1E8A4A; }
+    .btn-danger { background: #6A1A1A; color: #FFB0B0; }
+    .btn-danger:hover { background: #8A2A2A; }
+
+    /* ---- Контекстное меню ---- */
+    #context-menu {
+      position: fixed;
+      background: #16213E;
+      border: 1px solid #0F3460;
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      min-width: 220px;
+      z-index: 10000;
+      overflow: hidden;
+      display: none;
+      animation: fadeIn 0.1s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+    .ctx-header {
+      padding: 8px 12px;
+      background: #0F3460;
+      font-size: 11px;
+      font-weight: 700;
+      color: #A0C4FF;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 1px solid #1A3A6A;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ctx-item {
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #C0D0E0;
+      border-bottom: 1px solid #0F2040;
+      transition: background 0.1s;
+    }
+    .ctx-item:last-child { border-bottom: none; }
+    .ctx-item:hover { background: #1A3A6A; color: white; }
+    .ctx-item .ctx-icon { font-size: 15px; width: 20px; text-align: center; }
+
+    /* ---- Уведомления ---- */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #16213E;
+      border: 1px solid #0F3460;
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-size: 13px;
+      color: #E0E0E0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      z-index: 20000;
+      display: none;
+      animation: toastIn 0.2s ease;
+    }
+    #toast.success { border-color: #1A6A3A; background: #0A1E0A; color: #90EE90; }
+    #toast.error { border-color: #6A1A1A; background: #1E0A0A; color: #FFB0B0; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+    /* ---- Статусная строка ---- */
+    #statusbar {
+      background: #0F3460;
+      padding: 3px 12px;
+      font-size: 11px;
+      color: #8A9BB0;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    #statusbar span { display: flex; align-items: center; gap: 4px; }
+
+    /* ---- Скрытый input файла ---- */
+    #file-input { display: none; }
+
+    /* Скролл */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0A1020; }
+    ::-webkit-scrollbar-thumb { background: #1A3A6A; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2A5A9A; }
+
+    /* Поиск по свойствам */
+    #props-search {
+      padding: 8px 12px;
+      border-bottom: 1px solid #0F3460;
+      flex-shrink: 0;
+    }
+    #props-search input {
+      width: 100%;
+      background: #0F1E36;
+      border: 1px solid #1A3A6A;
+      border-radius: 4px;
+      color: #E0E0E0;
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+    #props-search input:focus { outline: none; border-color: #4A90D9; }
+
+    .no-props {
+      padding: 20px;
+      text-align: center;
+      color: #3A4A5A;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Шапка -->
+<div id="header">
+  <h1>📊 SVG-RDF Viewer — Просмотр VAD-диаграмм</h1>
+  <button class="btn btn-primary" id="btn-open">📂 Открыть SVG</button>
+  <button class="btn btn-secondary" id="btn-zoom-in" title="Увеличить">+</button>
+  <button class="btn btn-secondary" id="btn-zoom-reset" title="Сбросить масштаб">↺</button>
+  <button class="btn btn-secondary" id="btn-zoom-out" title="Уменьшить">−</button>
+  <span id="zoom-display">100%</span>
+</div>
+
+<!-- Скрытый input выбора файла -->
+<input type="file" id="file-input" accept=".svg"/>
+
+<!-- Основной макет -->
+<div id="main">
+
+  <!-- Боковая панель: список файлов -->
+  <div id="sidebar">
+    <div id="sidebar-title">📁 Файлы диаграмм</div>
+    <ul id="file-list"></ul>
+    <div id="sidebar-empty" style="display:none">
+      Откройте SVG-файл кнопкой «Открыть SVG» или перетащите файл на страницу
+    </div>
+  </div>
+
+  <!-- Область просмотра -->
+  <div id="viewer-area">
+    <div id="viewer-toolbar">
+      <span id="diagram-title">Выберите файл диаграммы</span>
+      <span style="font-size:11px;color:#5A6A7A">Нажмите ПКМ на элементе для просмотра/редактирования свойств</span>
+    </div>
+    <div id="svg-container">
+      <div id="svg-placeholder">
+        <div class="icon">📊</div>
+        <p>Откройте SVG-файл VAD-диаграммы</p>
+        <p style="font-size:12px;color:#2A3A4A">Поддерживаются файлы с RDF/XML и TriG-метаданными</p>
+        <button class="btn btn-primary" onclick="document.getElementById('btn-open').click()">📂 Открыть файл</button>
+      </div>
+      <div id="svg-wrapper" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Панель свойств -->
+  <div id="properties-panel" class="hidden">
+    <div id="props-header">
+      <h2 id="props-element-name">Свойства элемента</h2>
+      <button id="props-close" title="Закрыть">✕</button>
+    </div>
+    <!-- Вкладки -->
+    <div id="props-tabs">
+      <div class="props-tab active" data-tab="svg">SVG</div>
+      <div class="props-tab" data-tab="rdf">RDF</div>
+      <div class="props-tab" data-tab="edit">✏️ Редактор</div>
+    </div>
+    <!-- Поиск -->
+    <div id="props-search">
+      <input type="text" id="props-search-input" placeholder="🔍 Поиск по свойствам..."/>
+    </div>
+    <!-- Контент -->
+    <div id="props-content">
+      <!-- Вкладка SVG -->
+      <div class="props-section active" id="tab-svg">
+        <div class="no-props">Выберите элемент диаграммы</div>
+      </div>
+      <!-- Вкладка RDF -->
+      <div class="props-section" id="tab-rdf">
+        <div class="no-props">Выберите элемент диаграммы</div>
+      </div>
+      <!-- Вкладка Редактор -->
+      <div class="props-section" id="tab-edit">
+        <div class="no-props">Выберите элемент для редактирования</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Контекстное меню -->
+<div id="context-menu">
+  <div class="ctx-header" id="ctx-title">
+    <span id="ctx-element-type">Элемент</span>
+  </div>
+  <div class="ctx-item" id="ctx-svg-props">
+    <span class="ctx-icon">🔷</span> Свойства SVG-элемента
+  </div>
+  <div class="ctx-item" id="ctx-rdf-props">
+    <span class="ctx-icon">🔗</span> Свойства RDF
+  </div>
+  <div class="ctx-item" id="ctx-rdf-edit">
+    <span class="ctx-icon">✏️</span> Редактировать свойства RDF
+  </div>
+</div>
+
+<!-- Уведомление (toast) -->
+<div id="toast"></div>
+
+<!-- Статусная строка -->
+<div id="statusbar">
+  <span id="status-file">📄 Файл не открыт</span>
+  <span id="status-elements">🔷 Элементов: 0</span>
+  <span id="status-selected">👆 Не выбрано</span>
+  <span style="margin-left:auto;color:#3A4A5A">SVG+RDF Viewer v1.0</span>
+</div>
+
+<script>
+// ============================================================
+// SVG-RDF Viewer — браузерное приложение для VAD-диаграмм
+// Версия 1.0
+// Язык: браузерный JavaScript (ES6+, без Node.js)
+// ============================================================
+
+// ---- Состояние приложения ----
+const App = {
+  files: [],           // список загруженных файлов
+  currentFile: null,   // текущий файл
+  currentSvgDoc: null, // текущий SVG-документ
+  selectedElement: null, // выбранный элемент
+  zoom: 1.0,           // текущий масштаб
+  rdfTriples: [],      // извлечённые RDF-триплеты документа
+};
+
+// ---- Элементы DOM ----
+const $ = id => document.getElementById(id);
+const els = {
+  btnOpen: $('btn-open'),
+  fileInput: $('file-input'),
+  fileList: $('file-list'),
+  sidebarEmpty: $('sidebar-empty'),
+  svgContainer: $('svg-container'),
+  svgWrapper: $('svg-wrapper'),
+  svgPlaceholder: $('svg-placeholder'),
+  diagramTitle: $('diagram-title'),
+  propertiesPanel: $('properties-panel'),
+  propsHeader: $('props-header'),
+  propsElementName: $('props-element-name'),
+  propsClose: $('props-close'),
+  propsSearch: $('props-search-input'),
+  tabSvg: $('tab-svg'),
+  tabRdf: $('tab-rdf'),
+  tabEdit: $('tab-edit'),
+  ctxMenu: $('context-menu'),
+  ctxTitle: $('ctx-title'),
+  ctxElementType: $('ctx-element-type'),
+  ctxSvgProps: $('ctx-svg-props'),
+  ctxRdfProps: $('ctx-rdf-props'),
+  ctxRdfEdit: $('ctx-rdf-edit'),
+  toast: $('toast'),
+  statusFile: $('status-file'),
+  statusElements: $('status-elements'),
+  statusSelected: $('status-selected'),
+  btnZoomIn: $('btn-zoom-in'),
+  btnZoomOut: $('btn-zoom-out'),
+  btnZoomReset: $('btn-zoom-reset'),
+  zoomDisplay: $('zoom-display'),
+};
+
+// ============================================================
+// Открытие файлов
+// ============================================================
+
+// Кнопка «Открыть»
+els.btnOpen.addEventListener('click', () => els.fileInput.click());
+
+// Обработка выбора файла
+els.fileInput.addEventListener('change', (e) => {
+  Array.from(e.target.files).forEach(loadFile);
+  e.target.value = '';
+});
+
+// Перетаскивание файлов (drag & drop)
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  Array.from(e.dataTransfer.files)
+    .filter(f => f.name.toLowerCase().endsWith('.svg'))
+    .forEach(loadFile);
+});
+
+// Загрузка SVG-файла
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    const entry = {
+      name: file.name,
+      content,
+      file,
+    };
+    // Заменяем файл с тем же именем или добавляем новый
+    const idx = App.files.findIndex(f => f.name === file.name);
+    if (idx >= 0) App.files[idx] = entry;
+    else App.files.push(entry);
+
+    renderFileList();
+    openDiagram(entry);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ============================================================
+// Список файлов в боковой панели
+// ============================================================
+
+function renderFileList() {
+  els.fileList.innerHTML = '';
+  if (App.files.length === 0) {
+    els.sidebarEmpty.style.display = 'block';
+    return;
+  }
+  els.sidebarEmpty.style.display = 'none';
+
+  App.files.forEach(entry => {
+    const li = document.createElement('li');
+    li.className = entry === App.currentFile ? 'active' : '';
+    li.innerHTML = `<span class="file-icon">📊</span>
+                    <span class="file-name" title="${escHtml(entry.name)}">${escHtml(entry.name)}</span>`;
+    li.addEventListener('click', () => openDiagram(entry));
+    els.fileList.appendChild(li);
+  });
+}
+
+// ============================================================
+// Открытие и отображение диаграммы
+// ============================================================
+
+function openDiagram(entry) {
+  App.currentFile = entry;
+  App.selectedElement = null;
+  App.rdfTriples = [];
+
+  // Обновляем список
+  Array.from(els.fileList.children).forEach((li, i) => {
+    li.className = App.files[i] === entry ? 'active' : '';
+  });
+
+  // Парсим SVG
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(entry.content, 'image/svg+xml');
+  const parseError = svgDoc.querySelector('parsererror');
+  if (parseError) {
+    showToast('Ошибка парсинга SVG: ' + parseError.textContent.slice(0, 80), 'error');
+    return;
+  }
+  App.currentSvgDoc = svgDoc;
+
+  // Извлекаем RDF
+  App.rdfTriples = extractRdfFromDoc(svgDoc);
+
+  // Отображаем SVG
+  const svgEl = svgDoc.documentElement;
+  svgEl.removeAttribute('width');
+  svgEl.removeAttribute('height');
+  svgEl.style.cssText = 'width:100%;height:auto;display:block;';
+
+  els.svgWrapper.innerHTML = '';
+  els.svgWrapper.appendChild(svgEl);
+  els.svgPlaceholder.style.display = 'none';
+  els.svgWrapper.style.display = 'block';
+
+  // Навешиваем обработчики на элементы VAD
+  attachElementHandlers(svgEl);
+
+  // Обновляем заголовок
+  const title = getDocRdfTitle(svgDoc) || entry.name;
+  els.diagramTitle.textContent = title;
+
+  // Считаем VAD-элементы
+  const vadCount = svgEl.querySelectorAll('.vad-element').length;
+  els.statusFile.textContent = '📄 ' + entry.name;
+  els.statusElements.textContent = '🔷 Элементов: ' + vadCount;
+  els.statusSelected.textContent = '👆 Не выбрано';
+
+  // Сбрасываем масштаб
+  setZoom(1.0);
+
+  // Скрываем панель свойств
+  hidePropertiesPanel();
+
+  showToast('Диаграмма загружена: ' + entry.name, 'success');
+}
+
+// Получение заголовка диаграммы из RDF/XML
+function getDocRdfTitle(svgDoc) {
+  try {
+    const titleEl = svgDoc.querySelector(
+      'metadata rdf\\:Description > dc\\:title, ' +
+      'metadata rdf\\:Description > *[localName="title"]'
+    );
+    if (titleEl) return titleEl.textContent;
+    // Поиск без namespace-prefix
+    const allMeta = svgDoc.querySelectorAll('metadata *');
+    for (const el of allMeta) {
+      if (el.localName === 'title') return el.textContent;
+    }
+  } catch(e) {}
+  return null;
+}
+
+// ============================================================
+// Навешивание обработчиков событий на VAD-элементы
+// ============================================================
+
+function attachElementHandlers(svgEl) {
+  // Все кликабельные VAD-элементы
+  const vadEls = svgEl.querySelectorAll('.vad-element');
+  vadEls.forEach(el => {
+    // Дочерние text и line не должны перехватывать события мыши
+    el.querySelectorAll('text, line, tspan, metadata').forEach(child => {
+      child.style.pointerEvents = 'none';
+    });
+
+    // Клик левой кнопкой — выделяем
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectElement(el);
+    });
+
+    // Правая кнопка мыши — контекстное меню
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      selectElement(el);
+      showContextMenu(e.clientX, e.clientY, el);
+    });
+  });
+
+  // Клик по фону — снимаем выделение
+  svgEl.addEventListener('click', () => {
+    clearSelection();
+  });
+}
+
+// ============================================================
+// Выделение элемента
+// ============================================================
+
+function selectElement(el) {
+  // Снимаем предыдущее выделение
+  clearSelection();
+
+  App.selectedElement = el;
+
+  // Визуальное выделение — обводка
+  const shapes = el.querySelectorAll('rect, circle, ellipse, path');
+  shapes.forEach(shape => {
+    shape.dataset.origStroke = shape.getAttribute('stroke') || '';
+    shape.dataset.origStrokeWidth = shape.getAttribute('stroke-width') || '1';
+    shape.setAttribute('stroke', '#E94560');
+    shape.setAttribute('stroke-width', '3');
+  });
+
+  // Статусная строка
+  const title = el.getAttribute('data-vad-title') || el.id || 'элемент';
+  const type = el.getAttribute('data-vad-type') || '';
+  els.statusSelected.textContent = `👆 Выбран: ${title} (${type})`;
+}
+
+// Снять выделение
+function clearSelection() {
+  if (App.selectedElement) {
+    const shapes = App.selectedElement.querySelectorAll('rect, circle, ellipse, path');
+    shapes.forEach(shape => {
+      shape.setAttribute('stroke', shape.dataset.origStroke || '');
+      shape.setAttribute('stroke-width', shape.dataset.origStrokeWidth || '1');
+    });
+    App.selectedElement = null;
+  }
+  hideContextMenu();
+}
+
+// ============================================================
+// Контекстное меню
+// ============================================================
+
+function showContextMenu(x, y, el) {
+  const type = el.getAttribute('data-vad-type') || 'Элемент';
+  const title = el.getAttribute('data-vad-title') || el.id || 'Элемент';
+  els.ctxElementType.textContent = `${typeIcon(type)} ${title}`;
+
+  els.ctxMenu.style.display = 'block';
+
+  // Позиционирование — чтобы не выходило за экран
+  const mw = 230, mh = 130;
+  let left = x, top = y;
+  if (x + mw > window.innerWidth) left = x - mw;
+  if (y + mh > window.innerHeight) top = y - mh;
+  els.ctxMenu.style.left = left + 'px';
+  els.ctxMenu.style.top = top + 'px';
+}
+
+function hideContextMenu() {
+  els.ctxMenu.style.display = 'none';
+}
+
+// Клик по пунктам меню
+els.ctxSvgProps.addEventListener('click', () => {
+  hideContextMenu();
+  showSvgProperties();
+});
+
+els.ctxRdfProps.addEventListener('click', () => {
+  hideContextMenu();
+  showRdfProperties();
+});
+
+els.ctxRdfEdit.addEventListener('click', () => {
+  hideContextMenu();
+  showRdfEditor();
+});
+
+// Закрытие меню при клике в стороне
+document.addEventListener('click', (e) => {
+  if (!els.ctxMenu.contains(e.target)) hideContextMenu();
+});
+
+// ============================================================
+// Иконки типов элементов
+// ============================================================
+
+function typeIcon(type) {
+  const icons = { Process: '🔵', Role: '👤', Document: '📄', ITSystem: '💻', Event: '⚡', Diagram: '📊' };
+  return icons[type] || '🔷';
+}
+
+// ============================================================
+// Панель свойств
+// ============================================================
+
+function showPropertiesPanel() {
+  els.propertiesPanel.classList.remove('hidden');
+}
+
+function hidePropertiesPanel() {
+  els.propertiesPanel.classList.add('hidden');
+  // Сброс вкладок
+  document.querySelectorAll('.props-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('[data-tab="svg"]').classList.add('active');
+  document.querySelectorAll('.props-section').forEach(s => s.classList.remove('active'));
+  els.tabSvg.classList.add('active');
+}
+
+els.propsClose.addEventListener('click', hidePropertiesPanel);
+
+// Переключение вкладок
+document.querySelectorAll('.props-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    // Если есть выбранный элемент — наполняем содержимое нужной вкладки
+    if (App.selectedElement) {
+      if (target === 'svg') showSvgProperties();
+      else if (target === 'rdf') showRdfProperties();
+      else if (target === 'edit') showRdfEditor();
+      return; // showX сами активируют вкладку
+    }
+    // Без выбранного элемента просто переключаем вкладки
+    document.querySelectorAll('.props-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.props-section').forEach(s => s.classList.remove('active'));
+    $('tab-' + target).classList.add('active');
+  });
+});
+
+// ============================================================
+// Отображение SVG-свойств
+// ============================================================
+
+function showSvgProperties() {
+  if (!App.selectedElement) return;
+  const el = App.selectedElement;
+
+  const title = el.getAttribute('data-vad-title') || el.id || 'Элемент';
+  els.propsElementName.textContent = '🔷 ' + title;
+
+  // Собираем атрибуты SVG-элемента
+  const groups = {
+    'Идентификация': {},
+    'VAD-данные': {},
+    'Визуальные атрибуты': {},
+    'Прочие атрибуты': {},
+  };
+
+  const svgVisualAttrs = new Set(['x', 'y', 'width', 'height', 'rx', 'ry', 'cx', 'cy', 'r', 'fill', 'stroke', 'stroke-width', 'opacity', 'transform', 'viewBox', 'style', 'class', 'd', 'points']);
+
+  Array.from(el.attributes).forEach(attr => {
+    const { name, value } = attr;
+    if (name === 'id') groups['Идентификация'][name] = value;
+    else if (name.startsWith('data-vad-')) groups['VAD-данные'][name] = value;
+    else if (name.startsWith('data-')) groups['VAD-данные'][name] = value;
+    else if (svgVisualAttrs.has(name)) groups['Визуальные атрибуты'][name] = value;
+    else groups['Прочие атрибуты'][name] = value;
+  });
+
+  // Дочерние визуальные элементы (rect, circle)
+  const firstShape = el.querySelector('rect, circle, ellipse');
+  if (firstShape) {
+    Array.from(firstShape.attributes).forEach(attr => {
+      if (svgVisualAttrs.has(attr.name) && !groups['Визуальные атрибуты'][attr.name]) {
+        groups['Визуальные атрибуты'][attr.name + ' (shape)'] = attr.value;
+      }
+    });
+  }
+
+  let html = '';
+  Object.entries(groups).forEach(([groupName, props]) => {
+    const entries = Object.entries(props);
+    if (entries.length === 0) return;
+    html += `<div class="prop-group-title">${escHtml(groupName)}</div>`;
+    entries.forEach(([k, v]) => {
+      html += propRow(k, v);
+    });
+  });
+
+  if (!html) html = '<div class="no-props">Нет атрибутов</div>';
+
+  els.tabSvg.innerHTML = html;
+
+  // Переключаемся на вкладку SVG
+  activateTab('svg');
+  showPropertiesPanel();
+}
+
+// ============================================================
+// Отображение RDF-свойств
+// ============================================================
+
+function showRdfProperties() {
+  if (!App.selectedElement) return;
+  const el = App.selectedElement;
+  const title = el.getAttribute('data-vad-title') || el.id || 'Элемент';
+  els.propsElementName.textContent = '🔗 ' + title;
+
+  // Извлекаем RDF из metadata дочернего элемента
+  const triples = extractRdfFromElement(el);
+
+  let html = '';
+
+  if (triples.length > 0) {
+    html += `<div class="prop-group-title">RDF-свойства элемента (#${escHtml(el.id)})</div>`;
+    triples.forEach(({ predicate, object, isUri, datatype }) => {
+      const shortPred = shortenUri(predicate);
+      let valueClass = '';
+      let displayValue = object;
+      if (isUri) { valueClass = 'uri'; displayValue = shortenUri(object); }
+      else if (datatype === 'boolean') { valueClass = object === 'true' ? 'boolean-true' : 'boolean-false'; }
+      else if (datatype === 'integer' || datatype === 'decimal') valueClass = 'number';
+      html += propRow(shortPred, displayValue, valueClass, predicate);
+    });
+  }
+
+  // Также показываем данные из общего RDF-документа по URI элемента
+  if (el.id) {
+    const docTriples = App.rdfTriples.filter(t => t.subject.endsWith('#' + el.id) || t.subject === '#' + el.id);
+    if (docTriples.length > 0) {
+      html += `<div class="prop-group-title">RDF из блока документа</div>`;
+      docTriples.forEach(({ predicate, object, isUri }) => {
+        const shortPred = shortenUri(predicate);
+        const valueClass = isUri ? 'uri' : '';
+        html += propRow(shortPred, isUri ? shortenUri(object) : object, valueClass, predicate);
+      });
+    }
+  }
+
+  if (!html) {
+    html = '<div class="no-props">RDF-свойства не найдены.<br>Убедитесь, что SVG-элемент содержит блок &lt;metadata&gt; с RDF/XML.</div>';
+  }
+
+  els.tabRdf.innerHTML = html;
+  activateTab('rdf');
+  showPropertiesPanel();
+}
+
+// ============================================================
+// Редактор RDF-свойств
+// ============================================================
+
+function showRdfEditor() {
+  if (!App.selectedElement) return;
+  const el = App.selectedElement;
+  const title = el.getAttribute('data-vad-title') || el.id || 'Элемент';
+  els.propsElementName.textContent = '✏️ ' + title;
+
+  // Текущие RDF-свойства
+  const triples = extractRdfFromElement(el);
+
+  let html = `
+    <div style="padding:10px 12px;">
+      <div class="prop-group-title">Редактирование RDF-свойств</div>
+      <p style="font-size:11px;color:#8A9BB0;margin-bottom:10px;">
+        Элемент: <strong style="color:#A0C4FF">#${escHtml(el.id || '?')}</strong>
+      </p>
+  `;
+
+  // Форма: текущие свойства как редактируемые поля
+  html += `<div id="rdf-fields">`;
+  if (triples.length > 0) {
+    triples.forEach((t, i) => {
+      const shortPred = shortenUri(t.predicate);
+      html += `
+        <div class="editor-field" style="margin-bottom:8px;" data-idx="${i}">
+          <label>${escHtml(shortPred)}</label>
+          <input type="text"
+                 class="rdf-field-value"
+                 data-predicate="${escAttr(t.predicate)}"
+                 data-is-uri="${t.isUri}"
+                 data-datatype="${escAttr(t.datatype || '')}"
+                 value="${escAttr(t.object)}"
+                 placeholder="Значение"/>
+        </div>`;
+    });
+  } else {
+    html += '<p style="color:#5A6A7A;font-size:12px;">Нет RDF-свойств. Добавьте новое свойство ниже.</p>';
+  }
+  html += `</div>`;
+
+  // Добавление нового свойства
+  html += `
+    <div class="prop-group-title" style="margin-top:14px;">Добавить свойство</div>
+    <div class="editor-field">
+      <label>Предикат</label>
+      <select id="new-pred-select">
+        <option value="">-- выберите предикат --</option>
+        <optgroup label="Dublin Core">
+          <option value="http://purl.org/dc/elements/1.1/title">dc:title</option>
+          <option value="http://purl.org/dc/elements/1.1/description">dc:description</option>
+          <option value="http://purl.org/dc/elements/1.1/creator">dc:creator</option>
+          <option value="http://purl.org/dc/elements/1.1/date">dc:date</option>
+          <option value="http://purl.org/dc/elements/1.1/format">dc:format</option>
+        </optgroup>
+        <optgroup label="VAD">
+          <option value="http://example.org/vad#performer">vad:performer</option>
+          <option value="http://example.org/vad#input">vad:input</option>
+          <option value="http://example.org/vad#output">vad:output</option>
+          <option value="http://example.org/vad#usedSystem">vad:usedSystem</option>
+          <option value="http://example.org/vad#duration">vad:duration</option>
+          <option value="http://example.org/vad#durationUnit">vad:durationUnit</option>
+          <option value="http://example.org/vad#cost">vad:cost</option>
+          <option value="http://example.org/vad#costCurrency">vad:costCurrency</option>
+          <option value="http://example.org/vad#processType">vad:processType</option>
+          <option value="http://example.org/vad#maturityLevel">vad:maturityLevel</option>
+          <option value="http://example.org/vad#risk">vad:risk</option>
+          <option value="http://example.org/vad#isAutomated">vad:isAutomated</option>
+          <option value="http://example.org/vad#department">vad:department</option>
+          <option value="http://example.org/vad#roleType">vad:roleType</option>
+          <option value="http://example.org/vad#version">vad:version</option>
+          <option value="http://example.org/vad#status">vad:status</option>
+        </optgroup>
+        <optgroup label="Другое">
+          <option value="custom">Свой предикат...</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="editor-field" id="new-pred-custom" style="display:none">
+      <label>URI предиката</label>
+      <input type="text" id="new-pred-uri" placeholder="http://example.org/vad#myProp"/>
+    </div>
+    <div class="editor-field">
+      <label>Значение</label>
+      <input type="text" id="new-pred-value" placeholder="Значение или URI"/>
+    </div>
+    <div class="editor-field">
+      <label>Тип значения</label>
+      <select id="new-pred-type">
+        <option value="literal">Литерал (строка)</option>
+        <option value="uri">URI-ресурс</option>
+        <option value="integer">Целое число (xsd:integer)</option>
+        <option value="decimal">Число (xsd:decimal)</option>
+        <option value="boolean">Булево (xsd:boolean)</option>
+        <option value="date">Дата (xsd:date)</option>
+      </select>
+    </div>
+
+    <div class="editor-actions" style="margin-top:12px;">
+      <button class="btn btn-success btn-sm" id="btn-save-rdf">💾 Сохранить изменения</button>
+      <button class="btn btn-secondary btn-sm" id="btn-add-prop">➕ Добавить свойство</button>
+      <button class="btn btn-danger btn-sm" id="btn-export-rdf">📋 Копировать RDF/XML</button>
+    </div>
+    </div>`;
+
+  els.tabEdit.innerHTML = html;
+  activateTab('edit');
+  showPropertiesPanel();
+
+  // Обработчик переключения "свой предикат"
+  $('new-pred-select').addEventListener('change', function() {
+    $('new-pred-custom').style.display = this.value === 'custom' ? 'block' : 'none';
+  });
+
+  // Сохранение изменений
+  $('btn-save-rdf').addEventListener('click', () => saveRdfChanges(el, triples));
+
+  // Добавление нового свойства
+  $('btn-add-prop').addEventListener('click', () => addRdfProperty(el));
+
+  // Экспорт RDF/XML
+  $('btn-export-rdf').addEventListener('click', () => exportRdfXml(el));
+}
+
+// Сохранение изменённых RDF-свойств
+function saveRdfChanges(el, originalTriples) {
+  const inputs = document.querySelectorAll('.rdf-field-value');
+  const updated = [];
+  inputs.forEach(input => {
+    updated.push({
+      predicate: input.dataset.predicate,
+      object: input.value,
+      isUri: input.dataset.isUri === 'true',
+      datatype: input.dataset.datatype,
+    });
+  });
+
+  // Перестраиваем RDF/XML-блок
+  updateElementRdf(el, updated);
+  showToast('RDF-свойства сохранены', 'success');
+
+  // Обновляем data-vad-title если изменился dc:title
+  const titleTriple = updated.find(t => t.predicate.endsWith('/title'));
+  if (titleTriple) {
+    el.setAttribute('data-vad-title', titleTriple.object);
+  }
+
+  // Обновляем статус
+  const title = el.getAttribute('data-vad-title') || el.id;
+  els.statusSelected.textContent = `👆 Выбран: ${title}`;
+}
+
+// Добавление нового RDF-свойства
+function addRdfProperty(el) {
+  const selectEl = $('new-pred-select');
+  let predUri = selectEl.value;
+  if (predUri === 'custom') predUri = $('new-pred-uri').value.trim();
+  const value = $('new-pred-value').value.trim();
+  const type = $('new-pred-type').value;
+
+  if (!predUri) { showToast('Выберите или введите предикат', 'error'); return; }
+  if (!value) { showToast('Введите значение', 'error'); return; }
+
+  // Получаем текущие триплеты
+  const triples = extractRdfFromElement(el);
+  triples.push({
+    predicate: predUri,
+    object: value,
+    isUri: type === 'uri',
+    datatype: type !== 'literal' && type !== 'uri' ? type : '',
+  });
+
+  updateElementRdf(el, triples);
+  showToast(`Добавлено свойство: ${shortenUri(predUri)} = ${value}`, 'success');
+
+  // Обновляем редактор
+  showRdfEditor();
+}
+
+// Перестройка RDF/XML-блока элемента
+function updateElementRdf(el, triples) {
+  if (!el.id) el.id = 'element_' + Math.random().toString(36).slice(2, 8);
+  const subjectUri = '#' + el.id;
+
+  // Удаляем старый metadata
+  const oldMeta = el.querySelector('metadata');
+  if (oldMeta) oldMeta.remove();
+
+  // Создаём новый metadata
+  const rdfNs = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+  const svgNs = 'http://www.w3.org/2000/svg';
+
+  const metaEl = document.createElementNS(svgNs, 'metadata');
+
+  // Строим RDF/XML текстом (проще и без зависимостей от namespaces в DOM)
+  const rdfLines = [];
+  rdfLines.push(`<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"`);
+  rdfLines.push(`         xmlns:dc="http://purl.org/dc/elements/1.1/"`);
+  rdfLines.push(`         xmlns:vad="http://example.org/vad#"`);
+  rdfLines.push(`         xmlns:xsd="http://www.w3.org/2001/XMLSchema#">`);
+  rdfLines.push(`  <rdf:Description rdf:about="${subjectUri}">`);
+
+  triples.forEach(t => {
+    const localTag = buildRdfXmlTag(t.predicate);
+    if (t.isUri) {
+      rdfLines.push(`    <${localTag} rdf:resource="${escAttr(t.object)}"/>`);
+    } else if (t.datatype) {
+      const dtUri = expandDatatype(t.datatype);
+      rdfLines.push(`    <${localTag} rdf:datatype="${dtUri}">${escXml(t.object)}</${localTag}>`);
+    } else {
+      rdfLines.push(`    <${localTag}>${escXml(t.object)}</${localTag}>`);
+    }
+  });
+
+  rdfLines.push(`  </rdf:Description>`);
+  rdfLines.push(`</rdf:RDF>`);
+
+  // Устанавливаем innerHTML через DOMParser чтобы получить правильные элементы
+  const rdfXmlStr = `<svg xmlns="http://www.w3.org/2000/svg"
+       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+       xmlns:dc="http://purl.org/dc/elements/1.1/"
+       xmlns:vad="http://example.org/vad#"
+       xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+    <metadata>${rdfLines.join('\n')}</metadata>
+  </svg>`;
+
+  const tmpDoc = new DOMParser().parseFromString(rdfXmlStr, 'image/svg+xml');
+  const newMeta = tmpDoc.querySelector('metadata');
+  if (newMeta) {
+    const imported = App.currentSvgDoc
+      ? App.currentSvgDoc.importNode(newMeta, true)
+      : document.importNode(newMeta, true);
+    // Вставляем как первый дочерний элемент группы
+    el.insertBefore(imported, el.firstChild);
+  }
+
+  // Обновляем App.rdfTriples
+  App.rdfTriples = extractRdfFromDoc(App.currentSvgDoc || el.ownerDocument);
+}
+
+// Экспорт RDF/XML элемента в буфер обмена
+function exportRdfXml(el) {
+  const triples = extractRdfFromElement(el);
+  if (triples.length === 0) { showToast('Нет RDF-данных для экспорта', 'error'); return; }
+
+  const subjectUri = '#' + (el.id || '?');
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"\n`;
+  xml += `         xmlns:dc="http://purl.org/dc/elements/1.1/"\n`;
+  xml += `         xmlns:vad="http://example.org/vad#"\n`;
+  xml += `         xmlns:xsd="http://www.w3.org/2001/XMLSchema#">\n`;
+  xml += `  <rdf:Description rdf:about="${subjectUri}">\n`;
+  triples.forEach(t => {
+    const localTag = buildRdfXmlTag(t.predicate);
+    if (t.isUri) xml += `    <${localTag} rdf:resource="${escAttr(t.object)}"/>\n`;
+    else if (t.datatype) xml += `    <${localTag} rdf:datatype="${expandDatatype(t.datatype)}">${escXml(t.object)}</${localTag}>\n`;
+    else xml += `    <${localTag}>${escXml(t.object)}</${localTag}>\n`;
+  });
+  xml += `  </rdf:Description>\n</rdf:RDF>`;
+
+  navigator.clipboard.writeText(xml).then(() => {
+    showToast('RDF/XML скопирован в буфер обмена', 'success');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = xml;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('RDF/XML скопирован', 'success');
+  });
+}
+
+// Построение тега XML из URI предиката
+function buildRdfXmlTag(uri) {
+  const prefixes = {
+    'http://purl.org/dc/elements/1.1/': 'dc:',
+    'http://example.org/vad#': 'vad:',
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#': 'rdf:',
+    'http://www.w3.org/2000/01/rdf-schema#': 'rdfs:',
+  };
+  for (const [ns, pfx] of Object.entries(prefixes)) {
+    if (uri.startsWith(ns)) return pfx + uri.slice(ns.length);
+  }
+  // Если не найден префикс — используем последнюю часть URI
+  const local = uri.split(/[#/]/).pop();
+  return 'vad:' + local;
+}
+
+// Расширение краткого типа данных в URI
+function expandDatatype(dt) {
+  const xsdBase = 'http://www.w3.org/2001/XMLSchema#';
+  const map = { integer: xsdBase+'integer', decimal: xsdBase+'decimal', boolean: xsdBase+'boolean', date: xsdBase+'date', string: xsdBase+'string' };
+  return map[dt] || (dt.startsWith('http') ? dt : xsdBase + dt);
+}
+
+// ============================================================
+// Извлечение RDF-триплетов из SVG-элемента (его <metadata>)
+// ============================================================
+
+function extractRdfFromElement(el) {
+  const meta = el.querySelector(':scope > metadata, :scope > metadata');
+  if (!meta) return [];
+  return parseRdfXmlElement(meta, '#' + (el.id || ''));
+}
+
+// Извлечение RDF-триплетов из всего документа (корневой <metadata>)
+function extractRdfFromDoc(svgDoc) {
+  const svgEl = svgDoc.documentElement;
+  // Только первый уровень metadata (дочерний у svg)
+  const metas = svgEl.querySelectorAll(':scope > metadata');
+  const allTriples = [];
+  metas.forEach(meta => {
+    const triples = parseRdfXmlElement(meta, '');
+    allTriples.push(...triples);
+  });
+  return allTriples;
+}
+
+// Парсинг RDF/XML из DOM-узла (с namespace-агностичным подходом)
+function parseRdfXmlElement(container, defaultSubject) {
+  const triples = [];
+  // Ищем все rdf:Description или типизированные узлы
+  const descriptions = container.querySelectorAll('*');
+
+  descriptions.forEach(el => {
+    // Проверяем, является ли элемент rdf:Description или типом из RDF
+    if (el.localName !== 'Description' && el.localName !== 'RDF') {
+      // Может быть типизированный узел (например vad:Process)
+      // Или предикат (дочерний у rdf:Description)
+    }
+
+    // Пропускаем элемент rdf:RDF
+    if (el.localName === 'RDF') return;
+
+    const about = el.getAttributeNS('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'about')
+                || el.getAttribute('rdf:about');
+
+    // Это узел субъекта (rdf:Description или типизированный)
+    if (about !== null || el.localName === 'Description') {
+      const subject = about !== null ? about : defaultSubject;
+
+      // Если это не rdf:Description — добавляем rdf:type
+      if (el.localName !== 'Description') {
+        const typeUri = el.namespaceURI ? el.namespaceURI + el.localName : el.tagName;
+        if (typeUri && !typeUri.includes('RDF')) {
+          triples.push({
+            subject,
+            predicate: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+            object: typeUri,
+            isUri: true,
+            datatype: '',
+          });
+        }
+      }
+
+      // Итерируем по дочерним — это предикаты
+      Array.from(el.children).forEach(predEl => {
+        if (predEl.localName === 'Description') return; // вложенное описание пропускаем
+        const predUri = predEl.namespaceURI
+          ? predEl.namespaceURI + predEl.localName
+          : predEl.tagName;
+
+        // Объект: URI или литерал
+        const resource = predEl.getAttributeNS('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'resource')
+                       || predEl.getAttribute('rdf:resource');
+        const datatypeAttr = predEl.getAttributeNS('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'datatype')
+                           || predEl.getAttribute('rdf:datatype');
+
+        let object, isUri = false, datatype = '';
+
+        if (resource !== null) {
+          object = resource;
+          isUri = true;
+        } else {
+          object = predEl.textContent.trim();
+          if (datatypeAttr) {
+            // Извлекаем краткий тип
+            const xsdBase = 'http://www.w3.org/2001/XMLSchema#';
+            datatype = datatypeAttr.startsWith(xsdBase)
+              ? datatypeAttr.slice(xsdBase.length)
+              : datatypeAttr;
+          }
+        }
+
+        if (predUri && predUri !== 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
+          triples.push({ subject, predicate: predUri, object, isUri, datatype });
+        }
+      });
+    }
+  });
+
+  return triples;
+}
+
+// ============================================================
+// Масштабирование
+// ============================================================
+
+function setZoom(z) {
+  App.zoom = Math.max(0.1, Math.min(5.0, z));
+  els.svgWrapper.style.transform = `scale(${App.zoom})`;
+  els.zoomDisplay.textContent = Math.round(App.zoom * 100) + '%';
+}
+
+els.btnZoomIn.addEventListener('click', () => setZoom(App.zoom * 1.25));
+els.btnZoomOut.addEventListener('click', () => setZoom(App.zoom / 1.25));
+els.btnZoomReset.addEventListener('click', () => setZoom(1.0));
+
+// Масштабирование колесом мыши
+els.svgContainer.addEventListener('wheel', (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(App.zoom * delta);
+  }
+}, { passive: false });
+
+// ============================================================
+// Поиск по свойствам
+// ============================================================
+
+els.propsSearch.addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase();
+  const rows = document.querySelectorAll('.prop-row');
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(q) ? '' : 'none';
+  });
+});
+
+// ============================================================
+// Вспомогательные функции
+// ============================================================
+
+// Активация вкладки по имени
+function activateTab(name) {
+  document.querySelectorAll('.props-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === name);
+  });
+  document.querySelectorAll('.props-section').forEach(s => {
+    s.classList.toggle('active', s.id === 'tab-' + name);
+  });
+}
+
+// Рендер строки свойства
+function propRow(key, value, valueClass = '', fullKey = '') {
+  const fullKeyAttr = fullKey ? ` title="${escAttr(fullKey)}"` : '';
+  return `<div class="prop-row">
+    <div class="prop-key"${fullKeyAttr}>${escHtml(key)}</div>
+    <div class="prop-value ${valueClass}">${escHtml(value)}</div>
+  </div>`;
+}
+
+// Сокращение URI
+function shortenUri(uri) {
+  const prefixes = {
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#': 'rdf:',
+    'http://www.w3.org/2000/01/rdf-schema#': 'rdfs:',
+    'http://www.w3.org/2002/07/owl#': 'owl:',
+    'http://purl.org/dc/elements/1.1/': 'dc:',
+    'http://purl.org/dc/terms/': 'dcterms:',
+    'http://example.org/vad#': 'vad:',
+    'http://www.w3.org/2001/XMLSchema#': 'xsd:',
+    'http://xmlns.com/foaf/0.1/': 'foaf:',
+    'http://www.w3.org/2004/02/skos/core#': 'skos:',
+  };
+  for (const [ns, pfx] of Object.entries(prefixes)) {
+    if (uri.startsWith(ns)) return pfx + uri.slice(ns.length);
+  }
+  return uri;
+}
+
+// Экранирование HTML
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Экранирование XML-содержимого
+function escXml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Экранирование атрибутов
+function escAttr(str) {
+  return String(str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ============================================================
+// Toast-уведомления
+// ============================================================
+
+let toastTimer = null;
+function showToast(msg, type = '') {
+  clearTimeout(toastTimer);
+  els.toast.textContent = msg;
+  els.toast.className = type;
+  els.toast.style.display = 'block';
+  toastTimer = setTimeout(() => { els.toast.style.display = 'none'; }, 3000);
+}
+
+// ============================================================
+// Загрузка демо-файлов из папки dia/ (при наличии File System Access API)
+// ============================================================
+
+// Попытка автоматической загрузки примеров из dia/ через относительные пути
+// (работает при запуске через локальный сервер)
+async function tryLoadBuiltinDemos() {
+  const demoFiles = [
+    'dia/vad-order-management.svg',
+    'dia/vad-hr-process.svg',
+  ];
+
+  for (const path of demoFiles) {
+    try {
+      const resp = await fetch(path);
+      if (resp.ok) {
+        const content = await resp.text();
+        const name = path.split('/').pop();
+        const entry = { name, content, file: null };
+        if (!App.files.find(f => f.name === name)) {
+          App.files.push(entry);
+        }
+      }
+    } catch(e) {
+      // Игнорируем ошибки (CORS, нет сервера)
+    }
+  }
+
+  if (App.files.length > 0) {
+    renderFileList();
+    openDiagram(App.files[0]);
+  } else {
+    $('sidebar-empty') && (els.sidebarEmpty.style.display = 'block');
+  }
+}
+
+// Запуск при загрузке страницы
+tryLoadBuiltinDemos();
+</script>
+</body>
+</html>
